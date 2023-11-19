@@ -34,7 +34,7 @@
   /* justify-content: center; */
   /* align-items: center; */
   flex-direction: column;
-  width: 500px;
+  /* width: 500px; */
   height: auto;
   border: 1px solid #ccc;
   border-radius: 10px;
@@ -146,4 +146,30 @@
 }
 .btn-clickLogin:hover {
   background: #007bff;
+}
+
+.viewblog {
+  width: 10%;
+  border: none;
+  border-radius: 10px;
+  padding: 5px;
+}
+.viewblog:hover {
+  background: #007bff;
+  color: white;
+}
+
+.btn-pagehome {
+  width: 15%;
+  border: none;
+  border-radius: 10px;
+  padding: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+.btn-pagehome:hover {
+  background: #007bff;
+  color: white;
 }

@@ -14,11 +14,29 @@ const app = {
     const btnHtml = `  <div class="box">  <h3>Bài viết tổng hợp</h3>
       <button class="btn-clickLogin">login</button></div>
         `;
-    const html = blogs.map(({ userId, title, content, createdAt, timeUp }) => {
-      // Gọi hàm timeDate để xử lý thời gian
-      const formatTime = this.timeDate(createdAt);
-      const timeupblogs = this.timeup(timeUp);
-      return `
+    const html = blogs.map(
+      ({ _id, userId, title, content, createdAt, timeUp }) => {
+        // Gọi hàm timeDate để xử lý thời gian
+        const formatTime = this.timeDate(createdAt);
+        const timeupblogs = this.timeup(timeUp);
+        console.log(content);
+        const pattern = /((0|\+84)\d{9})/g;
+        content = content.replace(
+          pattern,
+          `<a href="tel:$1" target="_blank" title="Gọi tới số: $1" data-start="$2">$1</a>`
+        );
+        const mainto = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/;
+        content = content.replace(
+          mainto,
+          `<a href="tel:$1" target="_blank" title="email: $1" data-start="$2">$1</a>`
+        );
+        const link =
+          /(http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?[\w\?=]*)?)/;
+        content = content.replace(
+          link,
+          `<a href="tel:$1" target="_blank" title="link: $1" data-start="$2">$1</a>`
+        );
+        return `
          <div class="container">
        
         <div class="article skeleton">
@@ -27,9 +45,9 @@ const app = {
               <img class="imgavt" src="https://picsum.photos/200/200" alt="" />
             </div>
             <div class="name-time">
-              <span class="name skeleton"><i class="fa-regular fa-user"></i> ${userId.name}</span>
+              <span class="name skeleton profileUser"><i class="fa-regular fa-user"></i> ${userId.name}</span>
               <span class="time skeleton"><i class="fa-solid fa-earth-americas"></i> ${formatTime}</span>
-              <span class="time skeleton"><i class="fas fa-clock"></i> ${timeupblogs}</span>
+              
             </div>
           </div>
           <div class="info">
@@ -42,6 +60,7 @@ const app = {
               </p>
             </div>
           </div>
+        <button class="viewblog"  data-blog-id="${_id}">view</button>
           <div class="action">
             <div class="like skeleton" id="like-button"><i class="fa-regular fa-thumbs-up"></i>Thích</div>
             <div class="comment skeleton"><i class="fa-regular fa-comment"></i>Bình Luận</div>
@@ -50,12 +69,72 @@ const app = {
         </div>
       </div>
     `;
-    });
+      }
+    );
     // console.log("lolo", blogs.createdAt);
     rootBlogs.innerHTML = btnHtml + html.join("");
     // console.log(rootBlogs);
   },
 
+  addEvent: function () {
+    rootBlogs.addEventListener("click", async (e) => {
+      if (e.target.classList.contains("btn-clickLogin")) {
+        e.preventDefault();
+        root.style.display = "block";
+        rootBlogs.style.display = "none";
+      }
+      if (e.target.classList.contains("viewblog")) {
+        e.preventDefault();
+        const blogId = e.target.dataset.blogId; // Lấy ID của bài viết từ thuộc tính data-blog-id
+        console.log(blogId);
+        const { data: blog } = await client.get(`/blogs/${blogId}`);
+        const blogs = blog.data;
+        console.log(blogs);
+        const { userId, createdAt, timeUp, content, title } = blogs;
+        const formatTime = this.timeDate(createdAt);
+        const timeupblogs = this.timeup(timeUp);
+
+        const html = `
+      
+         <div class="container">  <button class="btn-pagehome">Quay lại <i class="fa-solid fa-arrow-rotate-left"></i></button>
+           <div class="article skeleton">
+             <div class="Author skeleton">
+               <div class="avatar skeleton">
+                 <img class="imgavt" src="https://picsum.photos/200/200" alt="" />
+               </div>
+               <div class="name-time">
+                 <span class="name skeleton profileUser"><i class="fa-regular fa-user"></i> ${userId.name}</span>
+                 <span class="time skeleton"><i class="fa-solid fa-earth-americas"></i> ${formatTime}</span>
+               </div>
+          </div>
+          <div class="info">
+            <div class="title">
+             <span class="time skeleton"><i class="fas fa-clock"></i> ${timeupblogs}</span>
+              <h4 class="skeleton">${title}</h4>
+            </div>
+            <div class="content">
+              <p class="skeleton">
+                ${content}
+              </p>
+              <p>Chúc mọi người buổi tối zui zẻ ♥♥♥♥♠♠</p>
+            </div>
+             </div>
+           </div>
+         </div>
+      `;
+
+        rootBlogs.innerHTML = html;
+      }
+
+      if (e.target.classList.contains("btn-pagehome")) {
+        e.preventDefault();
+
+        this.getBlogs(this.query);
+
+        // console.log("hello");
+      }
+    });
+  },
   getBlogs: async function (query = {}) {
     let queryString = new URLSearchParams(query).toString();
     if (queryString) {
@@ -65,16 +144,20 @@ const app = {
     this.blogs = blogs.data;
     console.log("blogs", blogs);
     this.render(blogs.data);
+    // this.viewBlog(blogs.data);
   },
-  addEvent: function () {
-    rootBlogs.addEventListener("click", function (e) {
-      if (e.target.classList.contains("btn-clickLogin")) {
-        e.preventDefault();
-        root.style.display = "block";
-        rootBlogs.style.display = "none";
-      }
-    });
-  },
+  // viewBlogs: async function (query = {}) {
+  //   let queryString = new URLSearchParams(query).toString();
+  //   if (queryString) {
+  //     queryString = "?" + queryString;
+  //   }
+  //   const { data: blogss } = await client.get("/blogs" + queryString);
+  //   this.blogss = blogss.data;
+  //   console.log("blogss", blogss);
+  //   // this.render(blogs.data);
+  //   this.viewBlog(blogss.data);
+  // },
+
   timeup: function (timeUp) {
     let dateup = new Date(timeUp);
     let hours = String(dateup.getHours()).padStart(2, "0");
@@ -120,6 +203,8 @@ const app = {
     };
 
     this.getBlogs(this.query);
+    // this.viewBlogs(this.query);
+    // this.getProfile();
     this.addEvent();
   },
 };
